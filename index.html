@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Одношаровий перцептрон</title>
+  <style>
+    :root {
+      --bg: #eef0f4;
+      --card: #ffffff;
+      --text: #1e293b;
+      --dim: #64748b;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --pos: #2563eb;
+      --neg: #dc2626;
+      --ok: #16a34a;
+      --ok-bg: #dcfce7;
+      --err: #dc2626;
+      --err-bg: #fef2f2;
+      --border: #e2e8f0;
+      --radius: 10px;
+      --display: Georgia, 'Palatino Linotype', 'Book Antiqua', serif;
+      --body: system-ui, -apple-system, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --mono: 'Cascadia Mono', 'Fira Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--body);
+      background: var(--bg);
+      background-image: radial-gradient(circle, #d0d5dc 0.8px, transparent 0.8px);
+      background-size: 22px 22px;
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px 16px 40px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+
+    /* ── Заголовок ── */
+    header { text-align: center; margin-bottom: 28px; }
+    h1 {
+      font-family: var(--display);
+      font-size: 2.1em;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    h1::after {
+      content: '';
+      display: block;
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      margin: 6px auto 0;
+      border-radius: 2px;
+    }
+    header p { color: var(--dim); font-size: 1.02em; margin-top: 2px; }
+
+    /* ── Картки ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+    .card h2 {
+      font-family: var(--display);
+      font-size: 1.25em;
+      margin-bottom: 14px;
+      padding-bottom: 7px;
+      border-bottom: 2px solid var(--accent-light);
+    }
+
+    /* ── SVG-діаграма ── */
+    #diagram-section svg {
+      width: 100%;
+      max-width: 880px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .conn-line { transition: stroke 0.4s ease, stroke-width 0.4s ease; }
+    .node-circle { stroke-width: 2; }
+    .input-fill { fill: #eff6ff; stroke: var(--accent); }
+    .bias-fill { fill: #fef9c3; stroke: #ca8a04; }
+    .sum-fill { fill: #fce7f3; stroke: #db2777; }
+    .act-fill { fill: #f0fdf4; stroke: var(--ok); stroke-width: 2; }
+    .out-fill { fill: #eff6ff; stroke: var(--accent); }
+    .node-text {
+      font-family: var(--display);
+      font-size: 14px;
+      fill: var(--text);
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+    .feat-text {
+      font-family: var(--body);
+      font-size: 11.5px;
+      fill: var(--text);
+      dominant-baseline: central;
+    }
+    .wlabel {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      text-anchor: middle;
+      transition: fill 0.4s;
+    }
+    .diagram-label {
+      font-family: var(--body);
+      font-size: 10px;
+      fill: var(--dim);
+      text-anchor: middle;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    /* ── Таблиця ── */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+    th, td { padding: 7px 8px; text-align: center; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; font-weight: 600; font-size: 0.88em; }
+    th small { display: block; font-weight: 400; color: var(--dim); font-size: 0.82em; }
+    td:first-child { text-align: left; font-weight: 600; }
+    tr.row-hi { background: var(--accent-light); }
+    tr.row-ok { background: var(--ok-bg); }
+    tr.row-err { background: var(--err-bg); }
+    .res-ok { color: var(--ok); font-weight: 700; }
+    .res-err { color: var(--err); font-weight: 700; }
+
+    /* ── Двоколонковий макет ── */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 768px) { .split { grid-template-columns: 1fr; } }
+
+    /* ── Кнопки ── */
+    .btns { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+    .btn {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--body);
+      font-size: 0.88em;
+      font-weight: 500;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-p { background: var(--accent); color: #fff; }
+    .btn-p:hover:not(:disabled) { background: #1d4ed8; }
+    .btn-s { background: #e2e8f0; color: var(--text); }
+    .btn-s:hover:not(:disabled) { background: #cbd5e1; }
+    .btn-d { background: var(--err-bg); color: var(--err); border: 1px solid #fecaca; }
+    .btn-d:hover:not(:disabled) { background: #fee2e2; }
+
+    /* ── Введення ── */
+    .inputs { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; align-items: center; }
+    .inputs label { font-size: 0.88em; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+    .inputs input[type="number"] {
+      width: 64px; padding: 4px 6px; border: 1px solid var(--border);
+      border-radius: 6px; font-family: var(--mono); font-size: 0.92em;
+    }
+    .inputs input[type="range"] { width: 100px; }
+
+    /* ── Статус ── */
+    .status { display: grid; gap: 4px; font-size: 0.88em; }
+    .status-row { display: flex; justify-content: space-between; }
+    .status-row span:first-child { color: var(--dim); }
+    .status-row span:last-child { font-family: var(--mono); font-weight: 500; }
+    #conv-msg {
+      display: none; margin-top: 10px; padding: 9px 12px;
+      background: var(--ok-bg); color: #15803d; border-radius: 8px;
+      font-weight: 600; text-align: center; font-size: 0.92em;
+      animation: fadeIn 0.4s ease;
+    }
+
+    /* ── Журнал обчислень ── */
+    #log {
+      height: 330px; overflow-y: auto;
+      background: #1e293b; border-radius: 8px; padding: 10px 12px;
+      font-family: var(--mono); font-size: 0.78em; color: #cbd5e1;
+      line-height: 1.55;
+    }
+    #log::-webkit-scrollbar { width: 6px; }
+    #log::-webkit-scrollbar-track { background: transparent; }
+    #log::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    .le { margin-bottom: 10px; padding: 6px 0 8px 9px; border-bottom: 1px solid #334155; animation: fadeIn 0.25s ease-out; }
+    .le-ok { border-left: 3px solid var(--ok); }
+    .le-err { border-left: 3px solid var(--err); }
+    .le-hd { color: #94a3b8; font-weight: 600; margin-bottom: 3px; }
+    .le-sum { color: #93c5fd; }
+    .le-act { color: #c4b5fd; }
+    .c-ok { color: #86efac; }
+    .c-err { color: #fca5a5; }
+    .c-upd { color: #fcd34d; }
+    .le-ep {
+      color: #94a3b8; text-align: center; padding: 6px 0;
+      border-bottom: 1px solid #334155; margin-bottom: 10px; font-weight: 600;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Передбачення ── */
+    .pred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+    @media (max-width: 768px) { .pred-grid { grid-template-columns: 1fr; } }
+    .toggles { display: flex; flex-direction: column; gap: 10px; }
+    .trow { display: flex; align-items: center; gap: 10px; }
+    .trow .tlbl { font-size: 0.9em; min-width: 170px; }
+    .trow .tval { font-family: var(--mono); font-size: 0.8em; color: var(--dim); width: 52px; }
+    .sw { position: relative; width: 42px; height: 23px; flex-shrink: 0; }
+    .sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .sw .sl {
+      position: absolute; inset: 0; background: #cbd5e1; border-radius: 12px;
+      cursor: pointer; transition: background 0.25s;
+    }
+    .sw .sl::after {
+      content: ''; position: absolute; width: 17px; height: 17px;
+      background: #fff; border-radius: 50%; top: 3px; left: 3px;
+      transition: transform 0.25s; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+    .sw input:checked + .sl { background: var(--accent); }
+    .sw input:checked + .sl::after { transform: translateX(19px); }
+    #pred-calc {
+      font-family: var(--mono); font-size: 0.82em;
+      background: #f8fafc; border-radius: 8px; padding: 12px 14px;
+      border: 1px solid var(--border); line-height: 1.7;
+    }
+    .pred-res {
+      margin-top: 12px; padding: 14px; border-radius: 8px;
+      text-align: center; font-size: 1.35em; font-family: var(--display);
+      font-weight: 700; transition: all 0.3s;
+    }
+    .pred-pos { background: var(--ok-bg); color: #15803d; border: 2px solid #86efac; }
+    .pred-neg { background: var(--err-bg); color: #991b1b; border: 2px solid #fecaca; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- A. Заголовок -->
+  <header>
+    <h1>Одношаровий перцептрон</h1>
+    <p>Бінарна класифікація — розпізнавання Семерікова за ознаками обличчя</p>
+  </header>
+
+  <!-- B. Діаграма перцептрона -->
+  <section class="card" id="diagram-section">
+    <h2>Архітектура перцептрона</h2>
+    <svg viewBox="0 0 880 375" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0 0L10 5L0 10z" fill="#475569"/>
+        </marker>
+      </defs>
+
+      <!-- З'єднання (задній шар) -->
+      <g id="conns">
+        <line id="c0" class="conn-line" x1="218" y1="40"  x2="492" y2="190" stroke="#94a3b8" stroke-width="1.5"/>
+        <line id="c1" class="conn-line" x1="218" y1="100" x2="492" y2="190" stroke="#94a3b8" stroke-width="1.5"/>
+        <line id="c2" class="conn-line" x1="218" y1="160" x2="492" y2="190" stroke="#94a3b8" stroke-width="1.5"/>
+        <line id="c3" class="conn-line" x1="218" y1="220" x2="492" y2="190" stroke="#94a3b8" stroke-width="1.5"/>
+        <line id="c4" class="conn-line" x1="218" y1="280" x2="492" y2="190" stroke="#94a3b8" stroke-width="1.5"/>
+        <line id="c5" class="conn-line" x1="218" y1="340" x2="492" y2="190" stroke="#94a3b8" stroke-width="1.5"/>
+      </g>
+
+      <!-- Мітки ваг -->
+      <g id="wlbls">
+        <text id="wl0" class="wlabel" x="320" y="85"  fill="#64748b">w&#x2081; = 0</text>
+        <text id="wl1" class="wlabel" x="320" y="123" fill="#64748b">w&#x2082; = 0</text>
+        <text id="wl2" class="wlabel" x="320" y="163" fill="#64748b">w&#x2083; = 0</text>
+        <text id="wl3" class="wlabel" x="320" y="203" fill="#64748b">w&#x2084; = 0</text>
+        <text id="wl4" class="wlabel" x="320" y="243" fill="#64748b">w&#x2085; = 0</text>
+        <text id="wl5" class="wlabel" x="320" y="280" fill="#64748b">w&#x2086; = 0</text>
+      </g>
+
+      <!-- Стрілки: суматор -> активація -> вихід -->
+      <line x1="548" y1="190" x2="618" y2="190" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+      <line x1="698" y1="190" x2="775" y2="190" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+
+      <!-- Вузли (передній шар) -->
+      <g id="nodes">
+        <circle cx="200" cy="40"  r="18" class="node-circle input-fill"/>
+        <text x="200" y="40" class="node-text">x&#x2081;</text>
+        <text x="175" y="40" text-anchor="end" class="feat-text">Окуляри</text>
+
+        <circle cx="200" cy="100" r="18" class="node-circle input-fill"/>
+        <text x="200" y="100" class="node-text">x&#x2082;</text>
+        <text x="175" y="100" text-anchor="end" class="feat-text">Борода та вуса</text>
+
+        <circle cx="200" cy="160" r="18" class="node-circle input-fill"/>
+        <text x="200" y="160" class="node-text">x&#x2083;</text>
+        <text x="175" y="160" text-anchor="end" class="feat-text">Довге волосся</text>
+
+        <circle cx="200" cy="220" r="18" class="node-circle input-fill"/>
+        <text x="200" y="220" class="node-text">x&#x2084;</text>
+        <text x="175" y="220" text-anchor="end" class="feat-text">Чорно-біле</text>
+
+        <circle cx="200" cy="280" r="18" class="node-circle input-fill"/>
+        <text x="200" y="280" class="node-text">x&#x2085;</text>
+        <text x="175" y="280" text-anchor="end" class="feat-text">Темний колір волосся</text>
+
+        <circle cx="200" cy="340" r="18" class="node-circle bias-fill"/>
+        <text x="200" y="340" class="node-text" style="font-size:13px">1</text>
+        <text x="175" y="340" text-anchor="end" class="feat-text">Зміщення (x&#x2086;)</text>
+
+        <circle cx="520" cy="190" r="28" class="node-circle sum-fill"/>
+        <text x="520" y="190" class="node-text" style="font-size:20px">&#x03A3;</text>
+
+        <rect x="622" y="165" width="73" height="50" rx="10" class="act-fill"/>
+        <text x="658" y="190" class="node-text" style="font-size:13px">F(S)</text>
+
+        <circle cx="798" cy="190" r="22" class="node-circle out-fill"/>
+        <text x="798" y="190" class="node-text" style="font-size:15px">y</text>
+      </g>
+
+      <text x="200" y="372" class="diagram-label">вхід</text>
+      <text x="590" y="372" class="diagram-label">перцептрон</text>
+      <text x="798" y="372" class="diagram-label">вихід</text>
+    </svg>
+  </section>
+
+  <!-- C. Навчальні дані -->
+  <section class="card">
+    <h2>Навчальні дані</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Особа</th>
+            <th>x&#x2081;<small>Окуляри</small></th>
+            <th>x&#x2082;<small>Борода</small></th>
+            <th>x&#x2083;<small>Довге вол.</small></th>
+            <th>x&#x2084;<small>Ч/Б</small></th>
+            <th>x&#x2085;<small>Темне вол.</small></th>
+            <th>x&#x2086;<small>Зміщення</small></th>
+            <th>y<small>Ціль</small></th>
+            <th>&#x0177;<small>Прогноз</small></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- D+E. Керування та Журнал -->
+  <div class="split">
+    <section class="card">
+      <h2>Керування навчанням</h2>
+      <div class="btns">
+        <button class="btn btn-s" id="bInit" onclick="initW()">Ініціалізувати ваги</button>
+        <button class="btn btn-p" id="bStep" onclick="clickStep()">Крок навчання</button>
+        <button class="btn btn-p" id="bEpoch" onclick="clickEpoch()">Епоха</button>
+        <button class="btn btn-p" id="bTrain" onclick="toggleTrain()">Навчити</button>
+        <button class="btn btn-d" id="bReset" onclick="resetAll()">Скинути</button>
+      </div>
+      <div class="inputs">
+        <label>&#x03B7; =
+          <input type="number" id="etaIn" value="1" min="0.1" max="10" step="0.1">
+        </label>
+        <label>Швидкість:
+          <input type="range" id="speedIn" min="1" max="10" value="5">
+        </label>
+      </div>
+      <div class="status">
+        <div class="status-row"><span>Епоха:</span><span id="sEpoch">0</span></div>
+        <div class="status-row"><span>Крок в епосі:</span><span id="sStep">0 / 4</span></div>
+        <div class="status-row"><span>Помилки в епосі:</span><span id="sErr">&mdash;</span></div>
+        <div class="status-row"><span>Ваги:</span><span id="sW">[0, 0, 0, 0, 0, 0]</span></div>
+      </div>
+      <div id="conv-msg">Перцептрон навчено! Збіжність за <span id="convE">0</span> епох(у).</div>
+    </section>
+
+    <section class="card">
+      <h2>Журнал обчислень</h2>
+      <div id="log"><div style="color:#64748b;font-style:italic;padding:8px 0">Натисніть «Крок навчання» або «Навчити» для початку&hellip;</div></div>
+    </section>
+  </div>
+
+  <!-- F. Інтерактивне передбачення -->
+  <section class="card">
+    <h2>Інтерактивне передбачення</h2>
+    <div class="pred-grid">
+      <div class="toggles" id="toggles"></div>
+      <div>
+        <div id="pred-calc"></div>
+        <div id="pred-res" class="pred-res pred-neg">Не Семеріков</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════
+//  Навчальні дані (відповідають таблиці з ODS)
+// ══════════════════════════════════════════════
+var FEATURES = [
+  '\u041E\u043A\u0443\u043B\u044F\u0440\u0438',
+  '\u0411\u043E\u0440\u043E\u0434\u0430 \u0442\u0430 \u0432\u0443\u0441\u0430',
+  '\u0414\u043E\u0432\u0433\u0435 \u0432\u043E\u043B\u043E\u0441\u0441\u044F',
+  '\u0427\u043E\u0440\u043D\u043E-\u0431\u0456\u043B\u0435',
+  '\u0422\u0435\u043C\u043D\u0438\u0439 \u043A\u043E\u043B\u0456\u0440 \u0432\u043E\u043B\u043E\u0441\u0441\u044F'
+];
+var SUB = '\u2081\u2082\u2083\u2084\u2085\u2086';
+var DATA = [
+  {label:'\u0421\u0435\u043C\u0435\u0440\u0456\u043A\u043E\u0432',  x:[-1,-1,-1,-1,-1, 1], y: 1},
+  {label:'\u041B\u0438\u0441\u0435\u043D\u043A\u043E',              x:[ 1, 1,-1, 1, 1, 1], y:-1},
+  {label:'\u0416\u0443\u0440\u0430\u0432\u043A\u043E\u0432\u0430',  x:[-1,-1, 1,-1, 1, 1], y:-1},
+  {label:'\u041E\u0441\u0438\u043F\u0447\u0443\u043A',              x:[-1,-1, 1,-1,-1, 1], y:-1}
+];
+var DELAYS = [2000,1500,1000,700,500,350,200,120,60,25];
+
+// ══════════════════════════════════════════════
+//  Стан моделі
+// ══════════════════════════════════════════════
+var weights = [0,0,0,0,0,0];
+var eta     = 1;
+var epoch   = 0;
+var si      = 0;       // індекс поточного зразка (0-3)
+var eErr    = 0;       // лічильник помилок в епосі
+var running = false;   // чи йде автонавчання
+var timer   = null;
+var done    = false;   // збіжність досягнута
+var trained = false;   // чи було хоча б одне навчання
+
+var $ = function(id) { return document.getElementById(id); };
+
+// ══════════════════════════════════════════════
+//  Ядро перцептрона
+// ══════════════════════════════════════════════
+
+// Зважена сума: S = w1*x1 + w2*x2 + ... + w6*x6
+function wsum(x, w) {
+  var s = 0;
+  for (var i = 0; i < 6; i++) s += w[i] * x[i];
+  return s;
+}
+
+// Функція активації (знакова)
+// F(S) = +1 якщо S > 0, інакше -1
+function act(s) {
+  return s > 0 ? 1 : -1;
+}
+
+// Передбачення: y = F(S)
+function predict(x, w) {
+  return act(wsum(x, w));
+}
+
+// ══════════════════════════════════════════════
+//  Крок навчання (правило перцептрона)
+// ══════════════════════════════════════════════
+function trainStep() {
+  if (done) return null;
+  eta = parseFloat($('etaIn').value) || 1;
+
+  // Якщо починається нова епоха — скинути лічильник помилок
+  if (si === 0) { epoch++; eErr = 0; }
+
+  var d  = DATA[si];
+  var ow = weights.slice();          // копія старих ваг
+  var s  = wsum(d.x, weights);       // зважена сума
+  var yh = act(s);                   // передбачення
+  var ok = (yh === d.y);             // чи правильне?
+  var delta = 0;
+
+  // Якщо помилка: delta = y_target - y_hat, w_i += eta * delta * x_i
+  if (!ok) {
+    eErr++;
+    delta = d.y - yh;
+    for (var i = 0; i < 6; i++) {
+      weights[i] += eta * delta * d.x[i];
+    }
+  }
+
+  var r = {
+    epoch: epoch, step: si + 1, label: d.label,
+    x: d.x, yt: d.y, s: s, yh: yh, ok: ok,
+    delta: delta, ow: ow, nw: weights.slice(),
+    si: si, epochDone: false, eErr: 0
+  };
+
+  si++;
+  if (si >= 4) {
+    si = 0;
+    r.epochDone = true;
+    r.eErr = eErr;
+    if (eErr === 0) done = true;
+  }
+
+  trained = true;
+  return r;
+}
+
+// ══════════════════════════════════════════════
+//  Обробники кнопок
+// ══════════════════════════════════════════════
+function initW() {
+  weights = [0,0,0,0,0,0];
+  epoch = 0; si = 0; eErr = 0; done = false; trained = false;
+  clearLog();
+  refreshUI();
+}
+
+function clickStep() {
+  var r = trainStep();
+  if (r) {
+    logStep(r);
+    if (r.epochDone) logEpoch(r);
+  }
+  refreshUI();
+}
+
+function clickEpoch() {
+  for (var i = 0; i < 4; i++) {
+    var r = trainStep();
+    if (r) {
+      logStep(r);
+      if (r.epochDone) logEpoch(r);
+    }
+    if (done) break;
+  }
+  refreshUI();
+}
+
+function toggleTrain() {
+  if (running) stopTrain();
+  else startTrain();
+}
+
+function startTrain() {
+  if (done) return;
+  running = true;
+  $('bTrain').textContent = '\u0417\u0443\u043F\u0438\u043D\u0438\u0442\u0438';
+  setBtns();
+  trainLoop();
+}
+
+function stopTrain() {
+  running = false;
+  clearTimeout(timer);
+  timer = null;
+  $('bTrain').textContent = '\u041D\u0430\u0432\u0447\u0438\u0442\u0438';
+  setBtns();
+}
+
+function trainLoop() {
+  if (!running || done || epoch >= 100) {
+    stopTrain();
+    refreshUI();
+    return;
+  }
+  var r = trainStep();
+  if (r) {
+    logStep(r);
+    if (r.epochDone) logEpoch(r);
+  }
+  refreshUI();
+  var spd = parseInt($('speedIn').value) || 5;
+  timer = setTimeout(trainLoop, DELAYS[spd - 1] || 500);
+}
+
+function resetAll() {
+  stopTrain();
+  weights = [0,0,0,0,0,0];
+  eta = 1;
+  epoch = 0; si = 0; eErr = 0; done = false; trained = false;
+  $('etaIn').value = '1';
+  clearLog();
+  refreshUI();
+}
+
+// ══════════════════════════════════════════════
+//  Оновлення інтерфейсу
+// ══════════════════════════════════════════════
+function refreshUI() {
+  updDiagram();
+  updTable();
+  updStatus();
+  updPred();
+  setBtns();
+  if (done) {
+    $('conv-msg').style.display = 'block';
+    $('convE').textContent = epoch;
+  }
+}
+
+// Діаграма: колір і товщина ліній, мітки ваг
+function updDiagram() {
+  for (var i = 0; i < 6; i++) {
+    var w    = weights[i];
+    var line = $('c' + i);
+    var lbl  = $('wl' + i);
+    var col  = w > 0 ? '#2563eb' : w < 0 ? '#dc2626' : '#94a3b8';
+    var th   = Math.max(1.5, Math.min(6, Math.abs(w) * 0.7 + 1.5));
+    line.setAttribute('stroke', col);
+    line.setAttribute('stroke-width', th);
+    lbl.textContent = 'w' + SUB[i] + ' = ' + w;
+    lbl.setAttribute('fill', col);
+  }
+}
+
+// Таблиця навчальних даних
+function updTable() {
+  var tb = $('tbody');
+  var rows = [];
+  for (var i = 0; i < 4; i++) {
+    var d   = DATA[i];
+    var cls = '';
+    var yh  = trained ? predict(d.x, weights) : null;
+    var ok  = yh !== null ? (yh === d.y) : null;
+
+    if (running && si === i) cls = 'row-hi';
+    else if (ok === true)    cls = 'row-ok';
+    else if (ok === false)   cls = 'row-err';
+
+    var cells = '<td>' + d.label + '</td>';
+    for (var j = 0; j < 6; j++) {
+      cells += '<td>' + (d.x[j] > 0 ? '+1' : '\u22121') + '</td>';
+    }
+    cells += '<td style="font-weight:600">' + (d.y > 0 ? '+1' : '\u22121') + '</td>';
+
+    if (ok === null) cells += '<td>\u2014</td>';
+    else if (ok)     cells += '<td class="res-ok">\u2713</td>';
+    else             cells += '<td class="res-err">\u2717</td>';
+
+    rows.push('<tr class="' + cls + '">' + cells + '</tr>');
+  }
+  tb.textContent = '';
+  tb.insertAdjacentHTML('beforeend', rows.join(''));
+}
+
+// Статус
+function updStatus() {
+  $('sEpoch').textContent = epoch;
+  $('sStep').textContent  = si + ' / 4';
+  $('sErr').textContent   = epoch > 0 ? eErr : '\u2014';
+  $('sW').textContent     = '[' + weights.join(', ') + ']';
+}
+
+// Стан кнопок
+function setBtns() {
+  $('bInit').disabled  = running;
+  $('bStep').disabled  = running || done;
+  $('bEpoch').disabled = running || done;
+  $('bTrain').disabled = done && !running;
+  $('bReset').disabled = running;
+  $('etaIn').disabled  = running;
+}
+
+// ══════════════════════════════════════════════
+//  Журнал обчислень
+// ══════════════════════════════════════════════
+var logOn = false;
+
+function clearLog() {
+  logOn = false;
+  var log = $('log');
+  log.textContent = '';
+  var hint = document.createElement('div');
+  hint.style.cssText = 'color:#64748b;font-style:italic;padding:8px 0';
+  hint.textContent = 'Натисніть \u00ABКрок навчання\u00BB або \u00ABНавчити\u00BB для початку\u2026';
+  log.appendChild(hint);
+  $('conv-msg').style.display = 'none';
+}
+
+// Форматування чисел для журналу
+function fN(n) { return n < 0 ? '(' + n + ')' : '' + n; }
+function fS(n) { return n >= 0 ? '+' + n : '' + n; }
+
+function logStep(r) {
+  var log = $('log');
+  if (!logOn) { log.textContent = ''; logOn = true; }
+
+  var el = document.createElement('div');
+  el.className = 'le ' + (r.ok ? 'le-ok' : 'le-err');
+
+  // Побудова рядка зваженої суми з числами
+  var parts = [];
+  for (var i = 0; i < 6; i++) {
+    parts.push(fN(r.ow[i]) + '\u00B7' + fN(r.x[i]));
+  }
+
+  // Заголовок
+  var hd = document.createElement('div');
+  hd.className = 'le-hd';
+  hd.textContent = '\u2500\u2500 Епоха ' + r.epoch + ' \u2502 Крок ' + r.step + ' \u2502 ' + r.label + ' \u2500\u2500';
+  el.appendChild(hd);
+
+  // Вхідний вектор
+  var xLine = document.createElement('div');
+  xLine.textContent = 'x = [' + r.x.map(fS).join(', ') + ']';
+  el.appendChild(xLine);
+
+  // Зважена сума
+  var sLine = document.createElement('div');
+  sLine.className = 'le-sum';
+  sLine.textContent = 'S = ' + parts.join(' + ') + ' = ' + r.s;
+  el.appendChild(sLine);
+
+  // Активація
+  var aLine = document.createElement('div');
+  aLine.className = 'le-act';
+  aLine.textContent = 'F(' + r.s + ') = ' + r.yh + (r.s > 0 ? '  (S > 0)' : '  (S \u2264 0)');
+  el.appendChild(aLine);
+
+  if (r.ok) {
+    var okLine = document.createElement('div');
+    okLine.className = 'c-ok';
+    okLine.textContent = '\u2713 Правильно (ціль: ' + fS(r.yt) + ')';
+    el.appendChild(okLine);
+  } else {
+    var errLine = document.createElement('div');
+    errLine.className = 'c-err';
+    errLine.textContent = '\u2717 Помилка! \u0177 = ' + r.yh + ', ціль = ' + fS(r.yt);
+    el.appendChild(errLine);
+
+    var upd1 = document.createElement('div');
+    upd1.className = 'c-upd';
+    upd1.textContent = '\u0394 = ' + r.yt + ' \u2212 (' + r.yh + ') = ' + r.delta +
+                       '  |  w\u1D62 += ' + eta + '\u00B7' + r.delta + '\u00B7x\u1D62';
+    el.appendChild(upd1);
+
+    var upd2 = document.createElement('div');
+    upd2.className = 'c-upd';
+    upd2.textContent = 'w = [' + r.nw.join(', ') + ']';
+    el.appendChild(upd2);
+  }
+
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+function logEpoch(r) {
+  var el = document.createElement('div');
+  el.className = 'le-ep';
+  if (r.eErr === 0) {
+    el.textContent = '\u2550\u2550\u2550 Епоха ' + r.epoch + ': 0 помилок \u2014 Збіжність! \u2713 \u2550\u2550\u2550';
+  } else {
+    var suf = r.eErr === 1 ? 'ка' : r.eErr < 5 ? 'ки' : 'ок';
+    el.textContent = '\u2550\u2550\u2550 Епоха ' + r.epoch + ': ' + r.eErr + ' помил' + suf + ' \u2550\u2550\u2550';
+  }
+  $('log').appendChild(el);
+  $('log').scrollTop = $('log').scrollHeight;
+}
+
+// ══════════════════════════════════════════════
+//  Панель інтерактивного передбачення
+// ══════════════════════════════════════════════
+function buildToggles() {
+  var c = $('toggles');
+  for (var i = 0; i < 5; i++) {
+    var row = document.createElement('div');
+    row.className = 'trow';
+
+    // Перемикач
+    var sw = document.createElement('label');
+    sw.className = 'sw';
+    var inp = document.createElement('input');
+    inp.type = 'checkbox';
+    inp.id = 'f' + i;
+    inp.addEventListener('change', updPred);
+    var sl = document.createElement('span');
+    sl.className = 'sl';
+    sw.appendChild(inp);
+    sw.appendChild(sl);
+
+    // Назва ознаки
+    var lbl = document.createElement('span');
+    lbl.className = 'tlbl';
+    lbl.textContent = FEATURES[i];
+
+    // Значення
+    var val = document.createElement('span');
+    val.className = 'tval';
+    val.id = 'fv' + i;
+    val.textContent = 'немає';
+
+    row.appendChild(sw);
+    row.appendChild(lbl);
+    row.appendChild(val);
+    c.appendChild(row);
+  }
+}
+
+function updPred() {
+  var x = [];
+  for (var i = 0; i < 5; i++) {
+    var on = $('f' + i).checked;
+    x.push(on ? 1 : -1);
+    $('fv' + i).textContent = on ? '\u0454' : 'немає';
+  }
+  x.push(1); // зміщення (bias)
+
+  var s = wsum(x, weights);
+  var y = act(s);
+
+  // Побудова формули
+  var parts = [];
+  for (var i = 0; i < 6; i++) {
+    parts.push(fN(weights[i]) + '\u00B7' + fN(x[i]));
+  }
+
+  var calc = $('pred-calc');
+  // Очищення безпечним способом
+  calc.textContent = '';
+
+  var d1 = document.createElement('div');
+  d1.textContent = 'x = [' + x.map(fS).join(', ') + ']';
+  calc.appendChild(d1);
+
+  var d2 = document.createElement('div');
+  d2.textContent = 'S = ' + parts.join(' + ') + ' = ' + s;
+  calc.appendChild(d2);
+
+  var d3 = document.createElement('div');
+  d3.textContent = 'F(' + s + ') = ' + y + (s > 0 ? '  (S > 0 \u2192 +1)' : '  (S \u2264 0 \u2192 \u22121)');
+  calc.appendChild(d3);
+
+  var res = $('pred-res');
+  if (y === 1) {
+    res.textContent = 'Семеріков';
+    res.className = 'pred-res pred-pos';
+  } else {
+    res.textContent = 'Не Семеріков';
+    res.className = 'pred-res pred-neg';
+  }
+}
+
+// ══════════════════════════════════════════════
+//  Ініціалізація сторінки
+// ══════════════════════════════════════════════
+buildToggles();
+refreshUI();
+</script>
+</body>
+</html>
