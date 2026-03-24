@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Аналіз вебсайтів університетів</title>
+  <style>
+    :root {
+      --bg: #eef0f4;
+      --card: #ffffff;
+      --text: #1e293b;
+      --dim: #64748b;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --ok: #16a34a;
+      --ok-bg: #dcfce7;
+      --err: #dc2626;
+      --err-bg: #fef2f2;
+      --warn: #d97706;
+      --warn-bg: #fef3c7;
+      --border: #e2e8f0;
+      --radius: 10px;
+      --display: Georgia, 'Palatino Linotype', 'Book Antiqua', serif;
+      --body: system-ui, -apple-system, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --mono: 'Cascadia Mono', 'Fira Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+      --c0: #2563eb; --c1: #d97706; --c2: #7c3aed; --c3: #059669;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--body);
+      background: var(--bg);
+      background-image: radial-gradient(circle, #d0d5dc 0.8px, transparent 0.8px);
+      background-size: 22px 22px;
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px 16px 40px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 28px; }
+    h1 {
+      font-family: var(--display);
+      font-size: 2.1em;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    h1::after {
+      content: '';
+      display: block;
+      width: 80px; height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      margin: 6px auto 0;
+      border-radius: 2px;
+    }
+    header p { color: var(--dim); font-size: 1.02em; margin-top: 2px; }
+    .back-link {
+      display: inline-block; margin-bottom: 8px;
+      font-size: 0.92em; color: var(--accent);
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+    .card h2 {
+      font-family: var(--display);
+      font-size: 1.25em;
+      margin-bottom: 14px;
+      padding-bottom: 7px;
+      border-bottom: 2px solid var(--accent-light);
+    }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
+
+    /* Radar */
+    #radar-svg { width: 100%; max-width: 500px; height: auto; display: block; margin: 0 auto; }
+    .radar-grid { fill: none; stroke: var(--border); stroke-width: 0.5; }
+    .radar-axis { stroke: var(--border); stroke-width: 0.5; }
+    .radar-label { font-size: 11px; fill: var(--dim); font-family: var(--body); }
+    .radar-poly { fill-opacity: 0.12; stroke-width: 2; }
+    .legend-row { display: flex; gap: 18px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.85em; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* Table */
+    .data-tbl { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+    .data-tbl th, .data-tbl td {
+      padding: 5px 7px; border: 1px solid var(--border); text-align: center;
+    }
+    .data-tbl th { background: #f8fafc; font-weight: 600; }
+    .data-tbl .uni-name { text-align: left; font-weight: 600; }
+    .cell-hi { background: #dcfce7; }
+    .cell-mid { background: #fef9c3; }
+    .cell-lo { background: #fef2f2; }
+
+    /* Sliders */
+    .slider-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 8px; font-size: 0.88em;
+    }
+    .slider-row label { flex: 0 0 180px; }
+    .slider-row input[type=range] { flex: 1; }
+    .slider-row .val { flex: 0 0 30px; text-align: right; font-family: var(--mono); font-weight: 600; }
+    @media (max-width: 700px) {
+      .slider-row label { flex: 0 0 130px; font-size: 0.82em; }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block; padding: 8px 18px;
+      border: none; border-radius: 7px;
+      font-size: 0.88em; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: #1d4ed8; }
+    .btn-dim { background: #e2e8f0; color: var(--text); }
+    .btn-dim:hover { background: #cbd5e1; }
+    .btn-group { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+
+    /* Status */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin: 10px 0;
+    }
+    .stat-box {
+      text-align: center; padding: 10px;
+      background: #f8fafc; border-radius: 7px;
+      border: 1px solid var(--border);
+    }
+    .stat-box .val { font-size: 1.5em; font-weight: 700; font-family: var(--mono); }
+    .stat-box .lbl { font-size: 0.78em; color: var(--dim); }
+
+    /* Bar chart */
+    #bars-svg { width: 100%; height: auto; display: block; }
+    #scatter-svg { width: 100%; max-width: 320px; height: auto; display: block; margin: 10px auto; }
+
+    /* Ranking */
+    .rank-list { list-style: none; counter-reset: rank; }
+    .rank-list li {
+      counter-increment: rank;
+      padding: 8px 12px; margin-bottom: 6px;
+      background: #f8fafc; border-radius: 7px;
+      border-left: 4px solid var(--accent);
+      font-weight: 600; font-size: 0.92em;
+    }
+    .rank-list li::before {
+      content: counter(rank) ". ";
+      color: var(--accent); font-weight: 700;
+    }
+    .rank-score { float: right; font-family: var(--mono); color: var(--dim); }
+
+    /* Log */
+    #log {
+      background: #1e293b; color: #e2e8f0;
+      font-family: var(--mono); font-size: 0.82em;
+      padding: 14px; border-radius: 7px;
+      max-height: 300px; overflow-y: auto;
+      line-height: 1.5; white-space: pre-wrap;
+    }
+
+    /* Recs */
+    .rec-uni { margin-bottom: 14px; }
+    .rec-uni-header {
+      font-weight: 700; font-size: 1em;
+      padding: 8px 12px; background: #f8fafc;
+      border-radius: 7px 7px 0 0; border: 1px solid var(--border);
+      cursor: pointer; user-select: none;
+    }
+    .rec-uni-header:hover { background: #eef0f4; }
+    .rec-body {
+      padding: 10px 12px; border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 7px 7px;
+    }
+    .rec-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 6px 0; border-bottom: 1px solid #f1f5f9;
+      font-size: 0.88em;
+    }
+    .rec-item:last-child { border-bottom: none; }
+    .rec-pri {
+      flex: 0 0 50px; text-align: center; font-family: var(--mono);
+      font-weight: 700; font-size: 0.82em; padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .pri-hi { background: var(--err-bg); color: var(--err); }
+    .pri-mid { background: var(--warn-bg); color: var(--warn); }
+    .pri-lo { background: var(--ok-bg); color: var(--ok); }
+    .gap-bar {
+      height: 6px; border-radius: 3px; background: #e2e8f0;
+      margin-top: 4px; overflow: hidden;
+    }
+    .gap-fill { height: 100%; border-radius: 3px; }
+
+    /* Strategy */
+    .strat-card {
+      padding: 14px; margin-bottom: 12px;
+      background: #f8fafc; border-radius: 7px;
+      border-left: 4px solid var(--accent);
+    }
+    .strat-card h3 { font-size: 1em; margin-bottom: 4px; }
+    .strat-card p { font-size: 0.88em; color: var(--dim); }
+    .strat-card ul { font-size: 0.88em; margin-top: 6px; padding-left: 18px; }
+    .strat-card .impact {
+      display: inline-block; font-size: 0.78em; padding: 2px 8px;
+      border-radius: 10px; margin-top: 6px; font-weight: 600;
+    }
+
+    /* Mockup */
+    .mockup-frame {
+      border: 2px solid var(--border); border-radius: 8px;
+      overflow: hidden; margin-bottom: 14px;
+    }
+    .mockup-bar {
+      background: #1e293b; padding: 6px 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .mockup-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .mockup-body { padding: 16px; }
+
+    .disclaimer {
+      font-size: 0.82em; color: var(--warn);
+      background: var(--warn-bg); padding: 8px 12px;
+      border-radius: 7px; margin-bottom: 12px;
+    }
+
+    footer {
+      text-align: center; margin-top: 28px;
+      font-size: 0.82em; color: var(--dim);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- A. Header -->
+  <a class="back-link" href="index.html">&larr; Головна</a>
+  <header>
+    <h1>Аналіз вебсайтів університетів</h1>
+    <p>Багатокритеріальна модель привабливості &mdash; 4 університети, 8 ознак</p>
+  </header>
+
+  <div class="disclaimer">
+    &#x26A0; Це навчальна демонстрація. 4 спостереження недостатньо для статистично значущих висновків.
+    Модель ілюструє принцип зваженої багатокритеріальної оцінки та гребеневої регресії.
+  </div>
+
+  <!-- B. Radar chart -->
+  <div class="card" id="radar-section">
+    <h2>&#x25CE; Порівняння вебсайтів</h2>
+    <svg id="radar-svg" viewBox="0 0 500 500"></svg>
+    <div class="legend-row" id="radar-legend"></div>
+  </div>
+
+  <!-- C. Data table -->
+  <div class="card" id="table-section">
+    <h2>&#x25A6; Дані оцінювання</h2>
+    <div style="overflow-x:auto">
+      <table class="data-tbl" id="scores-tbl"></table>
+    </div>
+    <h3 style="margin-top:14px; font-size:1em; font-family:var(--display);">Дані ЄДЕБО</h3>
+    <div style="overflow-x:auto">
+      <table class="data-tbl" id="edbo-tbl"></table>
+    </div>
+  </div>
+
+  <!-- D. Interactive model -->
+  <div class="split">
+    <div class="card" id="controls-section">
+      <h2>&#x2699; Модель привабливості</h2>
+      <div id="sliders"></div>
+      <div class="slider-row" style="margin-top:10px;">
+        <label>&lambda; (регуляризація)</label>
+        <input type="range" id="lambda-slider" min="0.1" max="10" step="0.1" value="1.0">
+        <span class="val" id="lambda-val">1.0</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-accent" id="btn-optimize">Оптимізувати ваги</button>
+        <button class="btn btn-dim" id="btn-reset">Скинути</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="val" id="stat-r">—</div><div class="lbl">R (кореляція)</div></div>
+        <div class="stat-box"><div class="val" id="stat-r2">—</div><div class="lbl">R&sup2;</div></div>
+        <div class="stat-box"><div class="val" id="stat-mae">—</div><div class="lbl">MAE</div></div>
+      </div>
+    </div>
+    <div class="card" id="results-section">
+      <h2>&#x25B6; Результати моделі</h2>
+      <svg id="bars-svg" viewBox="0 0 440 200"></svg>
+      <svg id="scatter-svg" viewBox="0 0 320 280"></svg>
+      <h3 style="margin-top:10px; font-size:1em;">Рейтинг привабливості</h3>
+      <ol class="rank-list" id="ranking"></ol>
+    </div>
+  </div>
+
+  <!-- E. Computation log -->
+  <div class="card">
+    <h2>&#x25B8; Журнал обчислень</h2>
+    <div id="log"></div>
+  </div>
+
+  <!-- F. Recommendations -->
+  <div class="card">
+    <h2>&#x2605; Рекомендації</h2>
+    <div id="recs"></div>
+  </div>
+
+  <!-- G. Marketing strategies -->
+  <div class="card">
+    <h2>&#x26A1; Маркетингові стратегії</h2>
+    <div id="strategies"></div>
+  </div>
+
+  <!-- H. Design templates -->
+  <div class="card">
+    <h2>&#x270E; Шаблони дизайну для нового ЗВО</h2>
+    <div id="templates"></div>
+  </div>
+
+  <footer>Навчальний проєкт &mdash; усі обчислення виконуються у браузері</footer>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   ДАНІ
+   ═══════════════════════════════════════ */
+var FEATURES = [
+  {id:'modern',  label:'Візуальна сучасність',      desc:'Дизайн, типографіка, кольори'},
+  {id:'mobile',  label:'Мобільна адаптивність',      desc:'Якість на мобільних пристроях'},
+  {id:'applicant',label:'Контент для абітурієнтів',  desc:'Інформація для вступників'},
+  {id:'nav',     label:'Зрозумілість навігації',     desc:'Легкість знаходження інформації'},
+  {id:'cta',     label:'Заклики до дії (CTA)',       desc:'Кнопки «Вступити», «Дізнатися більше»'},
+  {id:'fresh',   label:'Актуальність контенту',      desc:'Частота оновлень'},
+  {id:'social',  label:'Соціальний доказ',           desc:'Відгуки, досягнення, рейтинги'},
+  {id:'brand',   label:'Фірмовий стиль',            desc:'Цілісність візуального стилю'}
+];
+
+var UNIS = [
+  {
+    id:'kdpu', name:'КДПУ', full:'Криворізький державний педагогічний університет',
+    site:'kdpu.edu.ua', edboCode:3781, city:'Кривий Ріг', type:'Державний', year:1930,
+    scores:[3, 4, 4, 4, 2, 6, 4, 3],
+    edbo:{students:2100, programs:38, applicants:1400}
+  },
+  {
+    id:'knu', name:'КНУ', full:'Криворізький національний університет',
+    site:'knu.edu.ua', edboCode:919, city:'Кривий Ріг', type:'Державний', year:1922,
+    scores:[5, 5, 6, 5, 5, 6, 5, 5],
+    edbo:{students:7500, programs:95, applicants:5200}
+  },
+  {
+    id:'duet', name:'ДУЕТ', full:'Державний університет економіки і технологій',
+    site:'duet.edu.ua', edboCode:5707, city:'Кривий Ріг', type:'Державний', year:null,
+    scores:[7, 7, 7, 6, 6, 7, 5, 7],
+    edbo:{students:4583, programs:60, applicants:3100}
+  },
+  {
+    id:'duan', name:'ДУАН', full:'Університет імені Альфреда Нобеля',
+    site:'duan.edu.ua', edboCode:1271, city:'Дніпро', type:'Приватний', year:1993,
+    scores:[9, 9, 7, 8, 7, 7, 8, 9],
+    edbo:{students:3200, programs:28, applicants:4500}
+  }
+];
+
+var COLORS = ['#2563eb','#d97706','#7c3aed','#059669'];
+
+var REC_TEMPLATES = {
+  modern: [
+    'Повністю оновити візуальний дизайн: сучасна типографіка, більше білого простору',
+    'Модернізувати кольорову палітру та стилі заголовків',
+    'Додати анімації та сучасні UI-елементи'
+  ],
+  mobile: [
+    'Перебудувати сайт за принципом mobile-first',
+    'Оптимізувати навігацію для сенсорних екранів',
+    'Додати адаптивну сітку та гнучкі зображення'
+  ],
+  applicant: [
+    'Створити окремий портал для абітурієнтів з покроковою інструкцією вступу',
+    'Додати калькулятор шансів на вступ і FAQ',
+    'Розмістити відеоогляди спеціальностей та відгуки студентів'
+  ],
+  nav: [
+    'Спростити головне меню до 5-7 ключових пунктів',
+    'Додати пошук по сайту з автодоповненням',
+    'Створити хлібні крихти та карту сайту'
+  ],
+  cta: [
+    'Додати помітну кнопку «Подати заявку» на головну сторінку',
+    'Розмістити CTA-блоки в кожній секції сайту',
+    'Використати контрастні кольори для кнопок дій'
+  ],
+  fresh: [
+    'Запровадити регулярний графік оновлення контенту (щотижня)',
+    'Додати блог з актуальними подіями та досягненнями',
+    'Автоматизувати публікацію новин із соцмереж'
+  ],
+  social: [
+    'Додати секцію відгуків випускників та роботодавців',
+    'Розмістити рейтинги, нагороди та партнерства на головній',
+    'Інтегрувати стрічку Instagram/Facebook на сайт'
+  ],
+  brand: [
+    'Розробити цілісний бренд-бук: логотип, кольори, шрифти',
+    'Забезпечити єдиний стиль усіх сторінок сайту',
+    'Створити впізнаваний hero-банер з девізом університету'
+  ]
+};
+
+/* ═══════════════════════════════════════
+   СТАН
+   ═══════════════════════════════════════ */
+var weights = [5,5,5,5,5,5,5,5];
+var lambdaVal = 1.0;
+
+/* ═══════════════════════════════════════
+   ЧИСТІ ФУНКЦІЇ
+   ═══════════════════════════════════════ */
+function wsum(scores, w) {
+  var s = 0, tw = 0;
+  for (var i = 0; i < scores.length; i++) {
+    s += w[i] * scores[i];
+    tw += w[i];
+  }
+  return tw > 0 ? s / tw : 0;
+}
+
+function modelScore(uni) { return wsum(uni.scores, weights); }
+
+function attractionMetric(uni) {
+  return uni.edbo.applicants / uni.edbo.programs;
+}
+
+function normalizeArr(arr) {
+  var mn = arr[0], mx = arr[0];
+  for (var i = 1; i < arr.length; i++) {
+    if (arr[i] < mn) mn = arr[i];
+    if (arr[i] > mx) mx = arr[i];
+  }
+  var range = mx - mn || 1;
+  var res = [];
+  for (var i = 0; i < arr.length; i++) res.push((arr[i] - mn) / range);
+  return res;
+}
+
+function pearsonR(x, y) {
+  var n = x.length;
+  var sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+  for (var i = 0; i < n; i++) {
+    sx += x[i]; sy += y[i];
+    sxx += x[i]*x[i]; syy += y[i]*y[i];
+    sxy += x[i]*y[i];
+  }
+  var num = n*sxy - sx*sy;
+  var den = Math.sqrt((n*sxx - sx*sx) * (n*syy - sy*sy));
+  return den === 0 ? 0 : num / den;
+}
+
+function mae(x, y) {
+  var s = 0;
+  for (var i = 0; i < x.length; i++) s += Math.abs(x[i] - y[i]);
+  return s / x.length;
+}
+
+/* Matrix operations for ridge regression */
+function transpose(M) {
+  var r = M.length, c = M[0].length, T = [];
+  for (var j = 0; j < c; j++) {
+    T[j] = [];
+    for (var i = 0; i < r; i++) T[j][i] = M[i][j];
+  }
+  return T;
+}
+
+function matMul(A, B) {
+  var r = A.length, c = B[0].length, k = B.length, C = [];
+  for (var i = 0; i < r; i++) {
+    C[i] = [];
+    for (var j = 0; j < c; j++) {
+      var s = 0;
+      for (var p = 0; p < k; p++) s += A[i][p] * B[p][j];
+      C[i][j] = s;
+    }
+  }
+  return C;
+}
+
+function matVecMul(M, v) {
+  var res = [];
+  for (var i = 0; i < M.length; i++) {
+    var s = 0;
+    for (var j = 0; j < v.length; j++) s += M[i][j] * v[j];
+    res.push(s);
+  }
+  return res;
+}
+
+function solveLinear(A, b) {
+  var n = A.length;
+  var aug = [];
+  for (var i = 0; i < n; i++) {
+    aug[i] = [];
+    for (var j = 0; j < n; j++) aug[i][j] = A[i][j];
+    aug[i][n] = b[i];
+  }
+  for (var col = 0; col < n; col++) {
+    var maxRow = col, maxVal = Math.abs(aug[col][col]);
+    for (var r = col + 1; r < n; r++) {
+      if (Math.abs(aug[r][col]) > maxVal) { maxVal = Math.abs(aug[r][col]); maxRow = r; }
+    }
+    var tmp = aug[col]; aug[col] = aug[maxRow]; aug[maxRow] = tmp;
+    if (Math.abs(aug[col][col]) < 1e-12) continue;
+    var piv = aug[col][col];
+    for (var j = col; j <= n; j++) aug[col][j] /= piv;
+    for (var r = 0; r < n; r++) {
+      if (r === col) continue;
+      var f = aug[r][col];
+      for (var j = col; j <= n; j++) aug[r][j] -= f * aug[col][j];
+    }
+  }
+  var x = [];
+  for (var i = 0; i < n; i++) x.push(aug[i][n]);
+  return x;
+}
+
+function ridgeRegression(X, y, lambda) {
+  var Xt = transpose(X);
+  var XtX = matMul(Xt, X.map(function(r){ return r.map(function(v){ return [v]; }); }).reduce(function(a,b){
+    return a;
+  }));
+  /* XtX = Xt * X */
+  XtX = [];
+  var n = Xt.length;
+  for (var i = 0; i < n; i++) {
+    XtX[i] = [];
+    for (var j = 0; j < n; j++) {
+      var s = 0;
+      for (var k = 0; k < X.length; k++) s += Xt[i][k] * X[k][j];
+      XtX[i][j] = s;
+    }
+  }
+  for (var i = 0; i < n; i++) XtX[i][i] += lambda;
+  var Xty = matVecMul(Xt, y);
+  return solveLinear(XtX, Xty);
+}
+
+/* ═══════════════════════════════════════
+   UI: RADAR CHART
+   ═══════════════════════════════════════ */
+function drawRadar() {
+  var svg = document.getElementById('radar-svg');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  var cx = 250, cy = 250, maxR = 190;
+  var n = FEATURES.length;
+  var levels = [2, 4, 6, 8, 10];
+
+  /* Grid circles */
+  for (var li = 0; li < levels.length; li++) {
+    var r = maxR * levels[li] / 10;
+    var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', cx);
+    circle.setAttribute('cy', cy);
+    circle.setAttribute('r', r);
+    circle.setAttribute('class', 'radar-grid');
+    svg.appendChild(circle);
+    /* level label */
+    var lt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lt.setAttribute('x', cx + 3);
+    lt.setAttribute('y', cy - r - 2);
+    lt.setAttribute('class', 'radar-label');
+    lt.setAttribute('font-size', '9');
+    lt.setAttribute('fill', '#94a3b8');
+    lt.textContent = levels[li];
+    svg.appendChild(lt);
+  }
+
+  /* Axes + labels */
+  for (var i = 0; i < n; i++) {
+    var angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    var ex = cx + maxR * Math.cos(angle);
+    var ey = cy + maxR * Math.sin(angle);
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+    line.setAttribute('x2', ex); line.setAttribute('y2', ey);
+    line.setAttribute('class', 'radar-axis');
+    svg.appendChild(line);
+
+    var lx = cx + (maxR + 25) * Math.cos(angle);
+    var ly = cy + (maxR + 25) * Math.sin(angle);
+    var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', lx);
+    txt.setAttribute('y', ly);
+    txt.setAttribute('class', 'radar-label');
+    txt.setAttribute('text-anchor', Math.abs(angle) < 0.1 || Math.abs(angle - Math.PI) < 0.1 ? 'middle' : (lx > cx ? 'start' : 'end'));
+    txt.setAttribute('dominant-baseline', 'central');
+    txt.textContent = FEATURES[i].label;
+    svg.appendChild(txt);
+  }
+
+  /* University polygons */
+  for (var u = 0; u < UNIS.length; u++) {
+    var points = '';
+    for (var i = 0; i < n; i++) {
+      var angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      var val = UNIS[u].scores[i];
+      var r = maxR * val / 10;
+      var px = cx + r * Math.cos(angle);
+      var py = cy + r * Math.sin(angle);
+      points += px + ',' + py + ' ';
+    }
+    var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', points.trim());
+    poly.setAttribute('class', 'radar-poly');
+    poly.setAttribute('stroke', COLORS[u]);
+    poly.setAttribute('fill', COLORS[u]);
+    svg.appendChild(poly);
+  }
+
+  /* Legend */
+  var leg = document.getElementById('radar-legend');
+  while (leg.firstChild) leg.removeChild(leg.firstChild);
+  for (var u = 0; u < UNIS.length; u++) {
+    var item = document.createElement('div');
+    item.className = 'legend-item';
+    var dot = document.createElement('div');
+    dot.className = 'legend-dot';
+    dot.style.background = COLORS[u];
+    item.appendChild(dot);
+    var lbl = document.createElement('span');
+    lbl.textContent = UNIS[u].name;
+    item.appendChild(lbl);
+    leg.appendChild(item);
+  }
+}
+
+/* ═══════════════════════════════════════
+   UI: TABLES
+   ═══════════════════════════════════════ */
+function cellColor(val) {
+  if (val >= 7) return 'cell-hi';
+  if (val >= 5) return 'cell-mid';
+  return 'cell-lo';
+}
+
+function drawTables() {
+  /* Scores table */
+  var tbl = document.getElementById('scores-tbl');
+  while (tbl.firstChild) tbl.removeChild(tbl.firstChild);
+
+  var thead = document.createElement('thead');
+  var hr = document.createElement('tr');
+  var th0 = document.createElement('th'); th0.textContent = 'ЗВО'; hr.appendChild(th0);
+  for (var f = 0; f < FEATURES.length; f++) {
+    var th = document.createElement('th');
+    th.textContent = FEATURES[f].label.split(' ')[0];
+    th.title = FEATURES[f].label;
+    hr.appendChild(th);
+  }
+  var thSum = document.createElement('th'); thSum.textContent = '\u03A3'; hr.appendChild(thSum);
+  thead.appendChild(hr);
+  tbl.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+  for (var u = 0; u < UNIS.length; u++) {
+    var tr = document.createElement('tr');
+    var td0 = document.createElement('td');
+    td0.className = 'uni-name';
+    td0.textContent = UNIS[u].name;
+    tr.appendChild(td0);
+    var sum = 0;
+    for (var f = 0; f < FEATURES.length; f++) {
+      var td = document.createElement('td');
+      td.textContent = UNIS[u].scores[f];
+      td.className = cellColor(UNIS[u].scores[f]);
+      tr.appendChild(td);
+      sum += UNIS[u].scores[f];
+    }
+    var tds = document.createElement('td');
+    tds.textContent = sum;
+    tds.style.fontWeight = '700';
+    tr.appendChild(tds);
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+
+  /* EDBO table */
+  var etbl = document.getElementById('edbo-tbl');
+  while (etbl.firstChild) etbl.removeChild(etbl.firstChild);
+
+  var eh = document.createElement('thead');
+  var ehr = document.createElement('tr');
+  ['ЗВО','Код ЄДЕБО','Тип','Здобувачі','Програми','Заяви','Заяв/прог.'].forEach(function(t){
+    var th = document.createElement('th'); th.textContent = t; ehr.appendChild(th);
+  });
+  eh.appendChild(ehr);
+  etbl.appendChild(eh);
+
+  var etb = document.createElement('tbody');
+  for (var u = 0; u < UNIS.length; u++) {
+    var tr = document.createElement('tr');
+    var vals = [
+      UNIS[u].name, UNIS[u].edboCode, UNIS[u].type,
+      UNIS[u].edbo.students, UNIS[u].edbo.programs,
+      UNIS[u].edbo.applicants,
+      (UNIS[u].edbo.applicants / UNIS[u].edbo.programs).toFixed(1)
+    ];
+    for (var v = 0; v < vals.length; v++) {
+      var td = document.createElement('td');
+      if (v === 0) td.className = 'uni-name';
+      td.textContent = vals[v];
+      tr.appendChild(td);
+    }
+    etb.appendChild(tr);
+  }
+  etbl.appendChild(etb);
+}
+
+/* ═══════════════════════════════════════
+   UI: SLIDERS
+   ═══════════════════════════════════════ */
+function buildSliders() {
+  var container = document.getElementById('sliders');
+  for (var i = 0; i < FEATURES.length; i++) {
+    var row = document.createElement('div');
+    row.className = 'slider-row';
+    var lbl = document.createElement('label');
+    lbl.textContent = FEATURES[i].label;
+    lbl.title = FEATURES[i].desc;
+    row.appendChild(lbl);
+    var inp = document.createElement('input');
+    inp.type = 'range'; inp.min = '0'; inp.max = '10'; inp.step = '0.5';
+    inp.value = weights[i];
+    inp.setAttribute('data-idx', i);
+    inp.addEventListener('input', onSliderChange);
+    row.appendChild(inp);
+    var val = document.createElement('span');
+    val.className = 'val';
+    val.id = 'w-val-' + i;
+    val.textContent = weights[i].toFixed(1);
+    row.appendChild(val);
+    container.appendChild(row);
+  }
+}
+
+function onSliderChange(e) {
+  var idx = parseInt(e.target.getAttribute('data-idx'));
+  weights[idx] = parseFloat(e.target.value);
+  document.getElementById('w-val-' + idx).textContent = weights[idx].toFixed(1);
+  updateAll();
+}
+
+/* ═══════════════════════════════════════
+   UI: BAR CHART
+   ═══════════════════════════════════════ */
+function drawBars() {
+  var svg = document.getElementById('bars-svg');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  var predicted = UNIS.map(modelScore);
+  var actual = UNIS.map(attractionMetric);
+  var normP = normalizeArr(predicted);
+  var normA = normalizeArr(actual);
+
+  var barH = 16, gap = 34, left = 80, right = 420, top = 20;
+
+  /* Title */
+  var title = document.createElementNS('http://www.w3.org/2000/svg','text');
+  title.setAttribute('x', left); title.setAttribute('y', 12);
+  title.setAttribute('font-size','11'); title.setAttribute('fill','#64748b');
+  title.textContent = 'Модель (синій) vs ЄДЕБО заяв/прог. (зелений)';
+  svg.appendChild(title);
+
+  for (var u = 0; u < UNIS.length; u++) {
+    var y = top + u * gap;
+    /* Label */
+    var lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x', left - 5); lbl.setAttribute('y', y + barH);
+    lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','12');
+    lbl.setAttribute('fill','#1e293b'); lbl.setAttribute('font-weight','600');
+    lbl.textContent = UNIS[u].name;
+    svg.appendChild(lbl);
+
+    var maxW = right - left;
+    /* Model bar */
+    var r1 = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r1.setAttribute('x', left); r1.setAttribute('y', y);
+    r1.setAttribute('width', Math.max(4, normP[u] * maxW));
+    r1.setAttribute('height', barH); r1.setAttribute('rx','3');
+    r1.setAttribute('fill','#2563eb'); r1.setAttribute('opacity','0.75');
+    svg.appendChild(r1);
+
+    /* Actual bar */
+    var r2 = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r2.setAttribute('x', left); r2.setAttribute('y', y + barH + 2);
+    r2.setAttribute('width', Math.max(4, normA[u] * maxW));
+    r2.setAttribute('height', barH); r2.setAttribute('rx','3');
+    r2.setAttribute('fill','#16a34a'); r2.setAttribute('opacity','0.75');
+    svg.appendChild(r2);
+
+    /* Values */
+    var v1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+    v1.setAttribute('x', left + Math.max(4, normP[u] * maxW) + 4);
+    v1.setAttribute('y', y + barH - 3);
+    v1.setAttribute('font-size','10'); v1.setAttribute('fill','#2563eb');
+    v1.textContent = predicted[u].toFixed(2);
+    svg.appendChild(v1);
+
+    var v2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+    v2.setAttribute('x', left + Math.max(4, normA[u] * maxW) + 4);
+    v2.setAttribute('y', y + barH * 2);
+    v2.setAttribute('font-size','10'); v2.setAttribute('fill','#16a34a');
+    v2.textContent = actual[u].toFixed(1);
+    svg.appendChild(v2);
+  }
+}
+
+/* ═══════════════════════════════════════
+   UI: SCATTER PLOT
+   ═══════════════════════════════════════ */
+function drawScatter() {
+  var svg = document.getElementById('scatter-svg');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  var predicted = UNIS.map(modelScore);
+  var actual = UNIS.map(attractionMetric);
+
+  var pad = 45, w = 320, h = 280;
+  var pMin = Math.min.apply(null, predicted), pMax = Math.max.apply(null, predicted);
+  var aMin = Math.min.apply(null, actual), aMax = Math.max.apply(null, actual);
+  var pRange = pMax - pMin || 1, aRange = aMax - aMin || 1;
+
+  function sx(v) { return pad + (v - pMin) / pRange * (w - pad * 2); }
+  function sy(v) { return h - pad - (v - aMin) / aRange * (h - pad * 2); }
+
+  /* Axes */
+  var xAxis = document.createElementNS('http://www.w3.org/2000/svg','line');
+  xAxis.setAttribute('x1',pad); xAxis.setAttribute('y1',h-pad);
+  xAxis.setAttribute('x2',w-pad); xAxis.setAttribute('y2',h-pad);
+  xAxis.setAttribute('stroke','#cbd5e1'); svg.appendChild(xAxis);
+
+  var yAxis = document.createElementNS('http://www.w3.org/2000/svg','line');
+  yAxis.setAttribute('x1',pad); yAxis.setAttribute('y1',pad);
+  yAxis.setAttribute('x2',pad); yAxis.setAttribute('y2',h-pad);
+  yAxis.setAttribute('stroke','#cbd5e1'); svg.appendChild(yAxis);
+
+  /* Axis labels */
+  var xLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  xLbl.setAttribute('x', w/2); xLbl.setAttribute('y', h - 5);
+  xLbl.setAttribute('text-anchor','middle'); xLbl.setAttribute('font-size','10');
+  xLbl.setAttribute('fill','#64748b'); xLbl.textContent = 'Оцінка моделі';
+  svg.appendChild(xLbl);
+
+  var yLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  yLbl.setAttribute('x', 12); yLbl.setAttribute('y', h/2);
+  yLbl.setAttribute('text-anchor','middle'); yLbl.setAttribute('font-size','10');
+  yLbl.setAttribute('fill','#64748b');
+  yLbl.setAttribute('transform','rotate(-90 12 ' + h/2 + ')');
+  yLbl.textContent = 'Заяв / прог.';
+  svg.appendChild(yLbl);
+
+  /* Regression line */
+  var r = pearsonR(predicted, actual);
+  if (Math.abs(r) > 0.01) {
+    var mx = 0, my = 0;
+    for (var i = 0; i < 4; i++) { mx += predicted[i]; my += actual[i]; }
+    mx /= 4; my /= 4;
+    var num = 0, den = 0;
+    for (var i = 0; i < 4; i++) {
+      num += (predicted[i] - mx) * (actual[i] - my);
+      den += (predicted[i] - mx) * (predicted[i] - mx);
+    }
+    var slope = den !== 0 ? num / den : 0;
+    var intercept = my - slope * mx;
+    var lx1 = pMin, ly1 = slope * lx1 + intercept;
+    var lx2 = pMax, ly2 = slope * lx2 + intercept;
+    var regLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+    regLine.setAttribute('x1', sx(lx1)); regLine.setAttribute('y1', sy(ly1));
+    regLine.setAttribute('x2', sx(lx2)); regLine.setAttribute('y2', sy(ly2));
+    regLine.setAttribute('stroke','#ef4444'); regLine.setAttribute('stroke-width','1.5');
+    regLine.setAttribute('stroke-dasharray','4,3');
+    svg.appendChild(regLine);
+  }
+
+  /* Points */
+  for (var i = 0; i < UNIS.length; i++) {
+    var cx = sx(predicted[i]), cy2 = sy(actual[i]);
+    var circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circ.setAttribute('cx', cx); circ.setAttribute('cy', cy2);
+    circ.setAttribute('r', 6); circ.setAttribute('fill', COLORS[i]);
+    circ.setAttribute('stroke','#fff'); circ.setAttribute('stroke-width','2');
+    svg.appendChild(circ);
+    var lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x', cx + 9); lbl.setAttribute('y', cy2 + 4);
+    lbl.setAttribute('font-size','11'); lbl.setAttribute('font-weight','600');
+    lbl.setAttribute('fill', COLORS[i]);
+    lbl.textContent = UNIS[i].name;
+    svg.appendChild(lbl);
+  }
+
+  /* R value */
+  var rTxt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  rTxt.setAttribute('x', w - pad); rTxt.setAttribute('y', pad + 10);
+  rTxt.setAttribute('text-anchor','end'); rTxt.setAttribute('font-size','11');
+  rTxt.setAttribute('fill','#ef4444'); rTxt.setAttribute('font-weight','600');
+  rTxt.textContent = 'R = ' + r.toFixed(3);
+  svg.appendChild(rTxt);
+}
+
+/* ═══════════════════════════════════════
+   UI: RANKING
+   ═══════════════════════════════════════ */
+function drawRanking() {
+  var list = document.getElementById('ranking');
+  while (list.firstChild) list.removeChild(list.firstChild);
+
+  var scored = UNIS.map(function(u, i) {
+    return { name: u.full, score: modelScore(u), idx: i };
+  });
+  scored.sort(function(a, b) { return b.score - a.score; });
+
+  for (var i = 0; i < scored.length; i++) {
+    var li = document.createElement('li');
+    li.style.borderLeftColor = COLORS[scored[i].idx];
+    var sp = document.createElement('span');
+    sp.className = 'rank-score';
+    sp.textContent = scored[i].score.toFixed(2);
+    li.textContent = scored[i].name + ' ';
+    li.appendChild(sp);
+    list.appendChild(li);
+  }
+}
+
+/* ═══════════════════════════════════════
+   UI: STATISTICS
+   ═══════════════════════════════════════ */
+function updateStats() {
+  var predicted = UNIS.map(modelScore);
+  var actual = UNIS.map(attractionMetric);
+  var normP = normalizeArr(predicted);
+  var normA = normalizeArr(actual);
+
+  var r = pearsonR(normP, normA);
+  var r2 = r * r;
+  var m = mae(normP, normA);
+
+  document.getElementById('stat-r').textContent = r.toFixed(3);
+  document.getElementById('stat-r2').textContent = r2.toFixed(3);
+  document.getElementById('stat-mae').textContent = m.toFixed(3);
+}
+
+/* ═══════════════════════════════════════
+   UI: LOG
+   ═══════════════════════════════════════ */
+function logMsg(msg) {
+  var el = document.getElementById('log');
+  var line = document.createElement('div');
+  line.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function logComputation() {
+  var el = document.getElementById('log');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  logMsg('══════ Обчислення моделі ══════');
+  logMsg('Ваги: [' + weights.map(function(w){ return w.toFixed(1); }).join(', ') + ']');
+  logMsg('');
+
+  for (var u = 0; u < UNIS.length; u++) {
+    var uni = UNIS[u];
+    var terms = [];
+    for (var i = 0; i < weights.length; i++) {
+      terms.push(weights[i].toFixed(1) + '\u00D7' + uni.scores[i]);
+    }
+    var score = modelScore(uni);
+    var sumW = 0;
+    for (var i = 0; i < weights.length; i++) sumW += weights[i];
+    logMsg(uni.name + ': S = (' + terms.join(' + ') + ') / ' + sumW.toFixed(1) + ' = ' + score.toFixed(3));
+  }
+
+  var predicted = UNIS.map(modelScore);
+  var actual = UNIS.map(attractionMetric);
+  var normP = normalizeArr(predicted);
+  var normA = normalizeArr(actual);
+  var r = pearsonR(normP, normA);
+  logMsg('');
+  logMsg('R = ' + r.toFixed(4) + '  R\u00B2 = ' + (r*r).toFixed(4));
+}
+
+/* ═══════════════════════════════════════
+   UI: RECOMMENDATIONS
+   ═══════════════════════════════════════ */
+function drawRecs() {
+  var container = document.getElementById('recs');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  for (var u = 0; u < UNIS.length; u++) {
+    var uni = UNIS[u];
+    var gaps = [];
+    for (var i = 0; i < FEATURES.length; i++) {
+      gaps.push({
+        feature: FEATURES[i],
+        score: uni.scores[i],
+        weight: weights[i],
+        gap: 10 - uni.scores[i],
+        priority: weights[i] * (10 - uni.scores[i]),
+        idx: i
+      });
+    }
+    gaps.sort(function(a, b) { return b.priority - a.priority; });
+
+    var div = document.createElement('div');
+    div.className = 'rec-uni';
+
+    var hdr = document.createElement('div');
+    hdr.className = 'rec-uni-header';
+    hdr.style.borderLeft = '4px solid ' + COLORS[u];
+    hdr.textContent = '\u25BC ' + uni.name + ' \u2014 ' + uni.full;
+    hdr.addEventListener('click', (function(d) {
+      return function() {
+        var body = d.querySelector('.rec-body');
+        body.style.display = body.style.display === 'none' ? 'block' : 'none';
+      };
+    })(div));
+    div.appendChild(hdr);
+
+    var body = document.createElement('div');
+    body.className = 'rec-body';
+
+    var shown = 0;
+    for (var g = 0; g < gaps.length && shown < 5; g++) {
+      if (gaps[g].gap <= 1) continue;
+      var item = document.createElement('div');
+      item.className = 'rec-item';
+
+      var pri = document.createElement('div');
+      pri.className = 'rec-pri ' + (gaps[g].priority > 20 ? 'pri-hi' : gaps[g].priority > 10 ? 'pri-mid' : 'pri-lo');
+      pri.textContent = gaps[g].priority.toFixed(0);
+      item.appendChild(pri);
+
+      var content = document.createElement('div');
+      content.style.flex = '1';
+
+      var ftName = document.createElement('strong');
+      ftName.textContent = gaps[g].feature.label + ' (' + gaps[g].score + '/10)';
+      content.appendChild(ftName);
+
+      var templates = REC_TEMPLATES[gaps[g].feature.id];
+      var severity = gaps[g].gap >= 5 ? 0 : gaps[g].gap >= 3 ? 1 : 2;
+      var recText = document.createElement('div');
+      recText.style.fontSize = '0.88em';
+      recText.style.color = '#64748b';
+      recText.textContent = templates[severity];
+      content.appendChild(recText);
+
+      var bar = document.createElement('div');
+      bar.className = 'gap-bar';
+      var fill = document.createElement('div');
+      fill.className = 'gap-fill';
+      fill.style.width = (gaps[g].gap * 10) + '%';
+      fill.style.background = gaps[g].priority > 20 ? '#ef4444' : gaps[g].priority > 10 ? '#f59e0b' : '#22c55e';
+      bar.appendChild(fill);
+      content.appendChild(bar);
+
+      item.appendChild(content);
+      body.appendChild(item);
+      shown++;
+    }
+    if (shown === 0) {
+      var p = document.createElement('p');
+      p.style.cssText = 'color:#64748b;font-size:0.88em;';
+      p.textContent = 'Немає критичних рекомендацій при поточних вагах.';
+      body.appendChild(p);
+    }
+    div.appendChild(body);
+    container.appendChild(div);
+  }
+}
+
+/* ═══════════════════════════════════════
+   UI: STRATEGIES
+   ═══════════════════════════════════════ */
+function drawStrategies() {
+  var container = document.getElementById('strategies');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  var strategies = [
+    {
+      title: 'Цифрова присутність',
+      features: ['modern','mobile','brand'],
+      actions: [
+        'Редизайн головної сторінки з hero-секцією та чітким value proposition',
+        'Впровадження progressive web app (PWA) для мобільних',
+        'A/B тестування різних варіантів дизайну'
+      ],
+      cost: 'середня'
+    },
+    {
+      title: 'Контент-маркетинг',
+      features: ['fresh','social'],
+      actions: [
+        'Щотижневі статті про студентське життя та досягнення',
+        'Відеоблог з викладачами та успішними випускниками',
+        'Серія подкастів про кар\'єрні шляхи за спеціальностями'
+      ],
+      cost: 'низька'
+    },
+    {
+      title: 'Конверсія відвідувачів',
+      features: ['cta','applicant'],
+      actions: [
+        'Лендінг-сторінка для кожної спеціальності з CTA',
+        'Онлайн-калькулятор вартості навчання та шансів на вступ',
+        'Чат-бот для відповідей на питання абітурієнтів'
+      ],
+      cost: 'середня'
+    },
+    {
+      title: 'SEO та пошукова видимість',
+      features: ['fresh','nav'],
+      actions: [
+        'Оптимізація мета-тегів та структурованих даних',
+        'Створення контенту під ключові запити абітурієнтів',
+        'Покращення швидкості завантаження та Core Web Vitals'
+      ],
+      cost: 'низька'
+    },
+    {
+      title: 'Соціальні мережі',
+      features: ['social','brand'],
+      actions: [
+        'Активна присутність у TikTok та Instagram з щоденним контентом',
+        'Студентські амбасадори для створення UGC-контенту',
+        'Таргетована реклама на аудиторію 16-18 років у регіоні'
+      ],
+      cost: 'середня'
+    }
+  ];
+
+  for (var s = 0; s < strategies.length; s++) {
+    var st = strategies[s];
+    var card = document.createElement('div');
+    card.className = 'strat-card';
+
+    /* Compute impact based on current weights */
+    var impact = 0;
+    for (var f = 0; f < st.features.length; f++) {
+      for (var fi = 0; fi < FEATURES.length; fi++) {
+        if (FEATURES[fi].id === st.features[f]) { impact += weights[fi]; break; }
+      }
+    }
+    impact = impact / st.features.length;
+
+    var h3 = document.createElement('h3');
+    h3.textContent = st.title;
+    card.appendChild(h3);
+
+    var ul = document.createElement('ul');
+    for (var a = 0; a < st.actions.length; a++) {
+      var li = document.createElement('li');
+      li.textContent = st.actions[a];
+      ul.appendChild(li);
+    }
+    card.appendChild(ul);
+
+    var impSpan = document.createElement('span');
+    impSpan.className = 'impact';
+    impSpan.style.background = impact > 6 ? '#dcfce7' : impact > 3 ? '#fef9c3' : '#fef2f2';
+    impSpan.style.color = impact > 6 ? '#16a34a' : impact > 3 ? '#d97706' : '#dc2626';
+    impSpan.textContent = 'Вплив: ' + impact.toFixed(1) + '/10 | Витрати: ' + st.cost;
+    card.appendChild(impSpan);
+
+    container.appendChild(card);
+  }
+
+  /* New university block */
+  var newCard = document.createElement('div');
+  newCard.className = 'strat-card';
+  newCard.style.borderLeftColor = '#7c3aed';
+
+  var nh3 = document.createElement('h3');
+  nh3.textContent = '\u2728 Для нового ЗВО';
+  newCard.appendChild(nh3);
+
+  var np = document.createElement('p');
+  np.textContent = 'Рекомендації для побудови вебсайту нового освітнього закладу з нуля:';
+  newCard.appendChild(np);
+
+  var nul = document.createElement('ul');
+  [
+    'Mobile-first дизайн з мінімалістичною естетикою (як ДУАН)',
+    'Hero-секція з чітким слоганом та CTA «Подати заявку»',
+    'Окремі лендінги для кожної спеціальності з відгуками',
+    'Інтегрований чат-бот та калькулятор вступу',
+    'Активна присутність у TikTok, Instagram, YouTube',
+    'Регулярний контент: мінімум 3 публікації на тиждень',
+    'Швидкість завантаження < 3 секунди на мобільних',
+    'Прозора інформація про вартість, гуртожитки, стипендії'
+  ].forEach(function(t) {
+    var li = document.createElement('li');
+    li.textContent = t;
+    nul.appendChild(li);
+  });
+  newCard.appendChild(nul);
+  container.appendChild(newCard);
+}
+
+/* ═══════════════════════════════════════
+   UI: DESIGN TEMPLATES
+   ═══════════════════════════════════════ */
+function drawTemplates() {
+  var container = document.getElementById('templates');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  /* Recommended homepage layout */
+  var frame = document.createElement('div');
+  frame.className = 'mockup-frame';
+
+  var bar = document.createElement('div');
+  bar.className = 'mockup-bar';
+  var d1 = document.createElement('div'); d1.className = 'mockup-dot'; d1.style.background = '#ef4444'; bar.appendChild(d1);
+  var d2 = document.createElement('div'); d2.className = 'mockup-dot'; d2.style.background = '#f59e0b'; bar.appendChild(d2);
+  var d3 = document.createElement('div'); d3.className = 'mockup-dot'; d3.style.background = '#22c55e'; bar.appendChild(d3);
+  var urlTxt = document.createElement('span');
+  urlTxt.style.cssText = 'color:#94a3b8;font-size:0.78em;margin-left:10px;';
+  urlTxt.textContent = 'https://new-university.edu.ua';
+  bar.appendChild(urlTxt);
+  frame.appendChild(bar);
+
+  var body = document.createElement('div');
+  body.className = 'mockup-body';
+
+  /* Nav */
+  var nav = document.createElement('div');
+  nav.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e2e8f0;margin-bottom:16px;';
+  var logo = document.createElement('div');
+  logo.style.cssText = 'font-weight:800;font-size:1.1em;color:#1e293b;';
+  logo.textContent = '\u25C6 Університет';
+  nav.appendChild(logo);
+  var links = document.createElement('div');
+  links.style.cssText = 'display:flex;gap:16px;font-size:0.82em;color:#64748b;';
+  ['Програми','Вступ','Наука','Про нас'].forEach(function(t) {
+    var a = document.createElement('span');
+    a.textContent = t;
+    links.appendChild(a);
+  });
+  nav.appendChild(links);
+  body.appendChild(nav);
+
+  /* Hero */
+  var hero = document.createElement('div');
+  hero.style.cssText = 'background:linear-gradient(135deg,#dbeafe,#ede9fe);padding:30px 20px;border-radius:10px;text-align:center;margin-bottom:16px;';
+  var heroH = document.createElement('div');
+  heroH.style.cssText = 'font-size:1.4em;font-weight:800;color:#1e293b;margin-bottom:6px;';
+  heroH.textContent = 'Освіта для майбутнього';
+  hero.appendChild(heroH);
+  var heroP = document.createElement('div');
+  heroP.style.cssText = 'font-size:0.88em;color:#64748b;margin-bottom:12px;';
+  heroP.textContent = 'Сучасні програми \u2022 Практичний досвід \u2022 Міжнародні можливості';
+  hero.appendChild(heroP);
+  var heroCta = document.createElement('div');
+  heroCta.style.cssText = 'display:inline-block;padding:8px 24px;background:#2563eb;color:#fff;border-radius:8px;font-weight:600;font-size:0.88em;';
+  heroCta.textContent = 'Подати заявку \u2192';
+  hero.appendChild(heroCta);
+  body.appendChild(hero);
+
+  /* Programs grid */
+  var pgrid = document.createElement('div');
+  pgrid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;';
+  ['\uD83D\uDCBB IT','&#x2696; Право','\uD83D\uDCC8 Економіка'].forEach(function(t, i) {
+    var card = document.createElement('div');
+    card.style.cssText = 'padding:14px;border-radius:8px;border:1px solid #e2e8f0;text-align:center;';
+    var icon = document.createElement('div');
+    icon.style.fontSize = '1.5em';
+    icon.textContent = ['\uD83D\uDCBB','\u2696','\uD83D\uDCC8'][i];
+    card.appendChild(icon);
+    var name = document.createElement('div');
+    name.style.cssText = 'font-weight:600;font-size:0.88em;margin-top:4px;';
+    name.textContent = ['IT','Право','Економіка'][i];
+    card.appendChild(name);
+    pgrid.appendChild(card);
+  });
+  body.appendChild(pgrid);
+
+  /* Social proof */
+  var sp = document.createElement('div');
+  sp.style.cssText = 'display:flex;justify-content:space-around;padding:10px;background:#f8fafc;border-radius:8px;font-size:0.82em;text-align:center;';
+  [{n:'95%',l:'працевлаштування'},{n:'50+',l:'партнерів'},{n:'4.8',l:'рейтинг'}].forEach(function(d) {
+    var col = document.createElement('div');
+    var num = document.createElement('div');
+    num.style.cssText = 'font-size:1.3em;font-weight:700;color:#2563eb;';
+    num.textContent = d.n;
+    col.appendChild(num);
+    var lbl = document.createElement('div');
+    lbl.style.color = '#64748b';
+    lbl.textContent = d.l;
+    col.appendChild(lbl);
+    sp.appendChild(col);
+  });
+  body.appendChild(sp);
+
+  frame.appendChild(body);
+  container.appendChild(frame);
+
+  /* Color palette */
+  var palDiv = document.createElement('div');
+  palDiv.style.cssText = 'margin-top:14px;';
+  var palH = document.createElement('h3');
+  palH.style.cssText = 'font-size:1em;margin-bottom:8px;';
+  palH.textContent = 'Рекомендована кольорова палітра';
+  palDiv.appendChild(palH);
+
+  var palRow = document.createElement('div');
+  palRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+  [{c:'#1e293b',n:'Основний текст'},{c:'#2563eb',n:'Акцент'},{c:'#dbeafe',n:'Акцент (світлий)'},
+   {c:'#16a34a',n:'Успіх / CTA'},{c:'#f8fafc',n:'Фон карток'},{c:'#eef0f4',n:'Фон сторінки'}].forEach(function(p) {
+    var item = document.createElement('div');
+    item.style.cssText = 'text-align:center;';
+    var swatch = document.createElement('div');
+    swatch.style.cssText = 'width:50px;height:50px;border-radius:8px;border:1px solid #e2e8f0;background:' + p.c + ';';
+    item.appendChild(swatch);
+    var lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:0.72em;color:#64748b;margin-top:3px;';
+    lbl.textContent = p.n;
+    item.appendChild(lbl);
+    palRow.appendChild(item);
+  });
+  palDiv.appendChild(palRow);
+  container.appendChild(palDiv);
+
+  /* Key principles */
+  var prinDiv = document.createElement('div');
+  prinDiv.style.cssText = 'margin-top:14px;';
+  var prinH = document.createElement('h3');
+  prinH.style.cssText = 'font-size:1em;margin-bottom:8px;';
+  prinH.textContent = 'Ключові принципи дизайну';
+  prinDiv.appendChild(prinH);
+
+  var prinUl = document.createElement('ul');
+  prinUl.style.cssText = 'font-size:0.88em;padding-left:18px;color:#64748b;';
+  [
+    'Mobile-first: спочатку мобільна версія, потім десктоп',
+    'Hero-секція: великий заголовок + CTA + соціальний доказ',
+    'Мінімалізм: максимум 3 кольори, багато білого простору',
+    'Типографіка: великі заголовки (serif) + чистий body (sans-serif)',
+    'Швидкість: оптимізовані зображення, lazy loading, < 3с завантаження',
+    'Навігація: максимум 6 пунктів головного меню + пошук',
+    'Доступність: контраст WCAG AA, alt-текст, клавіатурна навігація'
+  ].forEach(function(t) {
+    var li = document.createElement('li');
+    li.textContent = t;
+    li.style.marginBottom = '4px';
+    prinUl.appendChild(li);
+  });
+  prinDiv.appendChild(prinUl);
+  container.appendChild(prinDiv);
+}
+
+/* ═══════════════════════════════════════
+   OPTIMIZE (Ridge Regression)
+   ═══════════════════════════════════════ */
+function optimize() {
+  var X = UNIS.map(function(u) { return u.scores.slice(); });
+  var actual = UNIS.map(attractionMetric);
+  var normA = normalizeArr(actual);
+
+  /* Normalize X columns to [0,1] (already 1-10, divide by 10) */
+  var Xn = X.map(function(row) { return row.map(function(v) { return v / 10; }); });
+
+  var w = ridgeRegression(Xn, normA, lambdaVal);
+
+  /* Clamp weights to [0, 10] and update */
+  logMsg('');
+  logMsg('══════ Оптимізація (Ridge, \u03BB=' + lambdaVal.toFixed(1) + ') ══════');
+  logMsg('X (нормалізовано):');
+  for (var i = 0; i < UNIS.length; i++) {
+    logMsg('  ' + UNIS[i].name + ': [' + Xn[i].map(function(v){return v.toFixed(2);}).join(', ') + ']');
+  }
+  logMsg('y (норм. заяв/прог.): [' + normA.map(function(v){return v.toFixed(3);}).join(', ') + ']');
+  logMsg('w = (X\u1D40X + \u03BBI)\u207B\u00B9 X\u1D40y');
+  logMsg('Оптимальні ваги (raw): [' + w.map(function(v){return v.toFixed(4);}).join(', ') + ']');
+
+  /* Scale to 0-10 range */
+  var wMin = Math.min.apply(null, w);
+  var wMax = Math.max.apply(null, w);
+  var wRange = wMax - wMin || 1;
+  for (var i = 0; i < w.length; i++) {
+    weights[i] = Math.max(0, Math.min(10, ((w[i] - wMin) / wRange) * 10));
+    weights[i] = Math.round(weights[i] * 2) / 2; /* round to 0.5 */
+  }
+  logMsg('Масштабовані ваги [0-10]: [' + weights.map(function(v){return v.toFixed(1);}).join(', ') + ']');
+
+  /* Update sliders */
+  var sliders = document.querySelectorAll('#sliders input[type=range]');
+  for (var i = 0; i < sliders.length; i++) {
+    sliders[i].value = weights[i];
+    document.getElementById('w-val-' + i).textContent = weights[i].toFixed(1);
+  }
+
+  updateAll();
+}
+
+function resetWeights() {
+  weights = [5,5,5,5,5,5,5,5];
+  var sliders = document.querySelectorAll('#sliders input[type=range]');
+  for (var i = 0; i < sliders.length; i++) {
+    sliders[i].value = 5;
+    document.getElementById('w-val-' + i).textContent = '5.0';
+  }
+  var logEl = document.getElementById('log');
+  while (logEl.firstChild) logEl.removeChild(logEl.firstChild);
+  updateAll();
+}
+
+/* ═══════════════════════════════════════
+   UPDATE ALL
+   ═══════════════════════════════════════ */
+function updateAll() {
+  drawBars();
+  drawScatter();
+  drawRanking();
+  updateStats();
+  logComputation();
+  drawRecs();
+  drawStrategies();
+}
+
+/* ═══════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════ */
+function init() {
+  drawRadar();
+  drawTables();
+  buildSliders();
+  drawTemplates();
+  updateAll();
+
+  document.getElementById('btn-optimize').addEventListener('click', optimize);
+  document.getElementById('btn-reset').addEventListener('click', resetWeights);
+  document.getElementById('lambda-slider').addEventListener('input', function(e) {
+    lambdaVal = parseFloat(e.target.value);
+    document.getElementById('lambda-val').textContent = lambdaVal.toFixed(1);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
