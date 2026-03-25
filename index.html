@@ -33,7 +33,7 @@
       justify-content: center;
       padding: 32px 16px;
     }
-    .container { max-width: 800px; width: 100%; }
+    .container { max-width: 1000px; width: 100%; }
 
     header { text-align: center; margin-bottom: 40px; }
     h1 {
@@ -55,9 +55,10 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 22px;
     }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 
     .model-card {
@@ -96,6 +97,7 @@
     }
     .tag-clf { background: var(--accent-light); color: var(--accent); }
     .tag-reg { background: var(--ok-bg); color: var(--ok); }
+    .tag-analysis { background: #fef3c7; color: #d97706; }
 
     .card-icon {
       font-size: 2em;
@@ -165,6 +167,18 @@
       <p>Тришарова мережа для передбачення ціни будинку за 12 ознаками. Зворотне поширення помилки, активація ReLU, оптимізатор SGD.</p>
       <div class="arch">12 &#x2192; 6 &#x2192; 3 &#x2192; 1&nbsp;&nbsp;(ReLU / лінійний)</div>
       <a class="btn-open" href="dnn.html">Відкрити</a>
+    </div>
+
+    <!-- Картка 3: Аналіз університетів -->
+    <div class="model-card">
+      <div class="card-icon">&#x25A8;</div>
+      <div>
+        <span class="tag tag-analysis">Аналіз</span>
+      </div>
+      <h2>Аналіз вебсайтів університетів</h2>
+      <p>Багатокритеріальна модель привабливості вебсайтів 4 університетів. Зважена оцінка, гребенева регресія, рекомендації та маркетингові стратегії.</p>
+      <div class="arch">8 ознак &#x2192; &#x03A3;(w&#x1D62;&#xB7;x&#x1D62;) &#x2192; рейтинг&nbsp;&nbsp;(4 ЗВО)</div>
+      <a class="btn-open" href="university.html">Відкрити</a>
     </div>
   </div>
 
