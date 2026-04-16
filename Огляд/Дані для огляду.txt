@@ -1,0 +1,228 @@
+Автор: Віра Журавкова, студент групи ПНІ-22, Криворізький державний педагогічнйи університет
+
+https://zakon.rada.gov.ua/laws/show/4742-20#Text - ЗАКОН УКРАЇНИ "Про академічну доброчесність", прийняття від 18.12.2025, введення в дію відбудеться 31.07.2026
+
+Стаття 8. Академічна доброчесність під час створення та оприлюднення академічних творів
+
+4. У разі використання в академічному творі об’єкта, згенерованого штучним інтелектом, автор повинен повідомити про це в такому творі із зазначенням методики генерування та/або посилання на відповідну комп’ютерну програму чи її опис згідно з вимогами щодо оформлення та/або оприлюднення відповідних академічних творів, визначених відповідним суб’єктом академічної діяльності.
+ 
+Стаття 29. Недоброчесне використання результатів, згенерованих штучним інтелектом
+
+1. Недоброчесне використання результатів, згенерованих штучним інтелектом, - це оприлюднення текстів, зображень, моделей, даних, інших результатів, згенерованих штучним інтелектом, як результатів власної академічної діяльності, якщо цей факт не зазначено в академічному творі чи супровідних матеріалах до нього.
+
+Необхідно чітко розкрити у огляді методику використання ГенШІ в процесі дослідження.
+
+Курсова робота: Методика організації групової взаємодії учнів у процесі пізнавальної діяльності на заняттях "Я досліджую світ"
+
+Мета: створити огляд джерел для цієї роботи
+
+https://mon.gov.ua/osvita-2/zagalna-serednya-osvita/osvitni-programi/navchalni-programi-dlya-1-4-klasiv - Програми Нової української школи
+
+Обмеження: лише програми під ред. О. Я. Савченко
+
+
+14 квітня 2026 року, Claude Sonnet 4.6 (Extended thinking)
+
+Запит: 
+
+Я хочу створити наративний огляд джерел для курсової роботи: Методика організації групової взаємодії учнів у процесі пізнавальної діяльності на заняттях "Я досліджую світ". Даними для огляду мають бути зі Scopus. Запропонуй структуру огляду та пошукові запити для Scopus.
+
+Відповідь:
+
+# Наративний огляд літератури: структура та пошукові запити
+
+## Рекомендована структура огляду
+
+### 1. Вступна частина
+- Актуальність групової взаємодії в початковій школі
+- Місце інтегрованого курсу "Я досліджую світ" у НУШ
+- Мета і завдання огляду
+
+### 2. Теоретичні засади групової взаємодії
+- Психолого-педагогічні основи кооперативного навчання
+- Типи групової роботи (кооперативна, колаборативна, дослідницька)
+- Вікові особливості групової взаємодії молодших школярів
+
+### 3. Пізнавальна діяльність у груповому форматі
+- Дослідницька поведінка учнів початкової школи
+- Inquiry-based learning як основа пізнавальної діяльності
+- Роль учителя-фасилітатора
+
+### 4. Методичні підходи до організації групової роботи
+- Структурування завдань для групової дослідницької діяльності
+- Оцінювання групової взаємодії
+- Цифрові інструменти підтримки
+
+### 5. Інтеграція природничих, соціальних та громадянознавчих змістів
+- Міждисциплінарний підхід у початковій школі
+- STEM/STEAM у контексті "Я досліджую світ"
+
+### 6. Висновки огляду та прогалини в дослідженнях
+
+---
+
+## Пошукові запити для Scopus
+
+> **Примітка:** Вставляйте запити у поле **Search** на [scopus.com](https://www.scopus.com), обираючи поле **Article Title, Abstract, Keywords**. Фільтруйте за роками: **2015–2025**, тип документу: **Article, Review**.
+
+---
+
+### Блок 1. Групова взаємодія та кооперативне навчання
+
+```
+TITLE-ABS-KEY("cooperative learning" AND "primary school" AND "cognitive activity")
+```
+
+```
+TITLE-ABS-KEY("collaborative learning" AND "elementary school" AND "inquiry")
+```
+
+```
+TITLE-ABS-KEY("group interaction" AND "primary education" AND "cognitive development")
+```
+
+---
+
+### Блок 2. Дослідницька діяльність у початковій школі
+
+```
+TITLE-ABS-KEY("inquiry-based learning" AND "primary school" AND "science")
+```
+
+```
+TITLE-ABS-KEY("project-based learning" AND "elementary school" AND "collaborative")
+```
+
+```
+TITLE-ABS-KEY("scientific inquiry" AND "young learners" AND "group work")
+```
+
+---
+
+### Блок 3. Інтегровані курси / "Я досліджую світ" аналоги
+
+```
+TITLE-ABS-KEY("integrated curriculum" AND "primary school" AND "social studies" AND "science")
+```
+
+```
+TITLE-ABS-KEY("cross-curricular" AND "elementary education" AND "inquiry" AND "group")
+```
+
+```
+TITLE-ABS-KEY("STEAM" AND "primary school" AND "collaborative learning")
+```
+
+---
+
+### Блок 4. Роль учителя та організація процесу
+
+```
+TITLE-ABS-KEY("teacher facilitation" AND "cooperative learning" AND "primary")
+```
+
+```
+TITLE-ABS-KEY("scaffolding" AND "group work" AND "cognitive activity" AND "elementary")
+```
+
+---
+
+### Блок 5. Оцінювання групової роботи
+
+```
+TITLE-ABS-KEY("formative assessment" AND "cooperative learning" AND "primary school")
+```
+
+```
+TITLE-ABS-KEY("peer assessment" AND "group interaction" AND "elementary education")
+```
+
+---
+
+## Практичні поради для роботи зі Scopus
+
+| Крок | Дія |
+|---|---|
+| 1 | Запустіть запит → перевірте кількість результатів (оптимально 50–300) |
+| 2 | Якщо результатів забагато — додайте `AND "Ukraine"` або `AND "New Ukrainian School"` |
+| 3 | Якщо замало — приберіть одне ключове слово або замініть `AND` на `OR` |
+| 4 | Використовуйте фільтри: **Subject area → Education**, **Language → English/Ukrainian** |
+| 5 | Зберігайте вибрані статті у **My list** для подальшого цитування |
+
+---
+
+## Щодо розкриття використання ШІ
+
+Оскільки ваш університет керується **Законом України «Про академічну доброчесність»** (ст. 8, ч. 4; ст. 29), у методологічному розділі курсової необхідно зазначити факт використання Claude для формування структури огляду та пошукових запитів із описом методики. Сам аналіз літератури та синтез змісту джерел повинні бути вашою самостійною роботою.
+
+
+===============
+
+16 квітня 2026 року, виконані пошуки у Scopus
+
+TITLE-ABS-KEY("cooperative learning" AND "primary school" AND "cognitive activity")
+TITLE-ABS-KEY("collaborative learning" AND "elementary school" AND "inquiry")
+TITLE-ABS-KEY("group interaction" AND "primary education" AND "cognitive development")
+TITLE-ABS-KEY("inquiry-based learning" AND "primary school" AND "science")
+TITLE-ABS-KEY("project-based learning" AND "elementary school" AND "collaborative")
+TITLE-ABS-KEY("scientific inquiry" AND "young learners" AND "group work")
+TITLE-ABS-KEY("integrated curriculum" AND "primary school" AND "social studies" AND "science")
+TITLE-ABS-KEY("cross-curricular" AND "elementary education" AND "inquiry" AND "group")
+TITLE-ABS-KEY("STEAM" AND "primary school" AND "collaborative learning")
+TITLE-ABS-KEY("teacher facilitation" AND "cooperative learning" AND "primary")
+TITLE-ABS-KEY("scaffolding" AND "group work" AND "cognitive activity" AND "elementary")
+TITLE-ABS-KEY("formative assessment" AND "cooperative learning" AND "primary school")
+TITLE-ABS-KEY("peer assessment" AND "group interaction" AND "elementary education")
+
+
+Експортовані файли:
+
+scopus_export_Apr 16-2026_1f5f2383-96d9-4f2a-955c-eba841bd8017.bib
+scopus_export_Apr 16-2026_1ff8578d-012b-4fc3-980a-194fa904b720.bib
+scopus_export_Apr 16-2026_2d148279-f988-4202-8b3a-956bca31e41c.bib
+scopus_export_Apr 16-2026_473d64df-1ea2-4c40-a243-4d664f2bf1b0.bib
+scopus_export_Apr 16-2026_6ed179eb-30e7-4f03-8ef9-635e0c634280.bib
+scopus_export_Apr 16-2026_79f8315f-d4ca-419c-a553-222f61db61ce.bib
+scopus_export_Apr 16-2026_9a9eafd7-1398-4257-9faa-0cf8631d8741.bib
+scopus_export_Apr 16-2026_aa6cdd60-5fd9-4a72-b661-49773dff6102.bib
+scopus_export_Apr 16-2026_bacd40ff-811d-491e-8b93-dfb9c3d9bc21.bib
+scopus_export_Apr 16-2026_d01f7ac4-e7cf-4a5a-9a22-b2028a2ca066.bib
+scopus_export_Apr 16-2026_d0e8bc21-38d7-4bf1-8e2f-88e197272efc.bib
+scopus_export_Apr 16-2026_e7b9e6fa-507b-4588-a12a-d465a541061a.bib
+scopus_export_Apr 16-2026_f478cd31-df09-4d02-97bb-00b42cfdb77a.bib
+
+Claude Sonnet 4.6 (Extended thinking)
+
+Запит: Я хочу створити наративний огляд джерел для курсової роботи: Методика організації групової взаємодії учнів у процесі пізнавальної діяльності на заняттях "Я досліджую світ". Дані для огляду зі Scopus:
+
+scopus_export_Apr 16-2026_1f5f2383-96d9-4f2a-955c-eba841bd8017.bib
+scopus_export_Apr 16-2026_1ff8578d-012b-4fc3-980a-194fa904b720.bib
+scopus_export_Apr 16-2026_2d148279-f988-4202-8b3a-956bca31e41c.bib
+scopus_export_Apr 16-2026_473d64df-1ea2-4c40-a243-4d664f2bf1b0.bib
+scopus_export_Apr 16-2026_6ed179eb-30e7-4f03-8ef9-635e0c634280.bib
+scopus_export_Apr 16-2026_79f8315f-d4ca-419c-a553-222f61db61ce.bib
+scopus_export_Apr 16-2026_9a9eafd7-1398-4257-9faa-0cf8631d8741.bib
+scopus_export_Apr 16-2026_aa6cdd60-5fd9-4a72-b661-49773dff6102.bib
+scopus_export_Apr 16-2026_bacd40ff-811d-491e-8b93-dfb9c3d9bc21.bib
+scopus_export_Apr 16-2026_d01f7ac4-e7cf-4a5a-9a22-b2028a2ca066.bib
+scopus_export_Apr 16-2026_d0e8bc21-38d7-4bf1-8e2f-88e197272efc.bib
+scopus_export_Apr 16-2026_e7b9e6fa-507b-4588-a12a-d465a541061a.bib
+scopus_export_Apr 16-2026_f478cd31-df09-4d02-97bb-00b42cfdb77a.bib
+
+Попередню структуру огляду подано у проєкті (Пошукова стратегія). Необхідне дотримання (Доброчесність).
+
+Результат має бути у форматі LaTeX та BibTeX - оформлений огляд літератури відповідно до академічних вимог.
+
+Створи багатокроковий запит для Claude, за яким користувач може керувати процесом створення такого огляду - підтвержденням або виправленням за результатами кроку. Кожен крок має бути невеликими з урахуванням можливих лімітів. Надай можливість продовження у випадку переривання.
+
+===========================
+
+
+
+
+
+
+
+
+
+
